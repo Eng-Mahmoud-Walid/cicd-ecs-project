@@ -1,0 +1,63 @@
+# .github/workflows/deploy.yml
+name: CI/CD Pipeline to AWS ECR/ECS
+
+# Workflow triggers
+on:
+  # Run when changes are pushed to the main branch
+  push:
+    branches:
+      - main
+  # Allows manual runs from the GitHub UI
+  workflow_dispatch:
+
+# Environment variables used throughout the workflow
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image to ECR
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 1. Configuration of AWS credentials using GitHub Secrets
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 2. Log in to the Amazon ECR registry
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        
+      # 3. Build, Tag, and Push the Docker Image
+      - name: Build, Tag, and Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          # Use commit SHA for unique versioning
+          IMAGE_TAG: ${{ github.sha }} 
+        run: |
+          # Build the image using the ECR registry URI and repository name
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          
+          # Push both the specific tag and the latest tag to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      # 4. Output the image URI for the next deployment job
+      - name: Output image URI
+        id: image
+        outputs:
+          image_uri: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          
+    # Pass the image URI output to the next job
+    outputs:
+      image_uri: ${{ steps.image.outputs.image_uri }}
