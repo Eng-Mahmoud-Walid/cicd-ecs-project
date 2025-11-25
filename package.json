@@ -1,0 +1,12 @@
+{
+  "name": "ecs-demo-microservice",
+  "version": "1.0.0",
+  "description": "A lightweight microservice for CI/CD demonstration.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
