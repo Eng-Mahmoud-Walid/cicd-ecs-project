@@ -1,4 +1,3 @@
-# .github/workflows/deploy.yml
 name: CI/CD Pipeline to AWS ECR/ECS
 
 # Workflow triggers
@@ -20,6 +19,10 @@ jobs:
     name: Build and Push Docker Image to ECR
     runs-on: ubuntu-latest
     
+    # Define outputs to be used by the next job (deploy)
+    outputs:
+      image_uri: ${{ steps.image.outputs.image_uri }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -52,12 +55,38 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-      # 4. Output the image URI for the next deployment job
-      - name: Output image URI
+      # 4. Define the output image URI
+      - name: Define image URI output
         id: image
-        outputs:
-          image_uri: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+        run: echo "image_uri=$(echo ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }})" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: Deploy to AWS ECS
+    runs-on: ubuntu-latest
+    # This job waits for the build-and-push job to successfully complete
+    needs: build-and-push 
+    
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Deploy to ECS Service using the aws-actions/amazon-ecs-deploy-task-definition Action
+      - name: Deploy to ECS Service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          # Cluster and Service names from GitHub Secrets
+          cluster: ${{ secrets.ECS_CLUSTER }}
+          service: ${{ secrets.ECS_SERVICE }}
           
-    # Pass the image URI output to the next job
-    outputs:
-      image_uri: ${{ steps.image.outputs.image_uri }}
+          # Task definition family name from GitHub Secrets
+          task-definition: ${{ secrets.ECS_TASK_DEFINITION }}
+          
+          # The container name used in your Task Definition
+          container-name: cicd-app-container 
+          
+          # The image URI built in the previous job
+          image: ${{ needs.build-and-push.outputs.image_uri }}
