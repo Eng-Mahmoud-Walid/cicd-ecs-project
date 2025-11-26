@@ -27,7 +27,7 @@ The goal of this project is to automate the process of Continuous Integration an
 ## 📦 **Project Structure**
 
 Here’s an overview of the project’s structure:
-
+```md
 ├── .github/
 │ └── workflows/
 │ └── deploy.yml # GitHub Actions workflow file
@@ -37,7 +37,7 @@ Here’s an overview of the project’s structure:
 ├── package.json # Project dependencies and scripts
 ├── .gitignore # Git ignored files
 └── README.md # Project documentation
-
+```
 ---
 
 🔄 CI/CD Pipeline Overview
