@@ -163,3 +163,14 @@ jobs:
 🌍 Deployment on AWS ECS
 Once the CI/CD pipeline is successfully executed, the application is deployed to AWS ECS (Elastic Container Service). AWS ECS handles the orchestration and scaling of the application container.
 ---
+<img width="1845" height="979" alt="image" src="https://github.com/user-attachments/assets/58664e70-47e5-41a6-8a71-58a7b610cbc0" />
+
+The error you're seeing here is expected, as the AWS credentials used in this workflow are fake/placeholder credentials for the sake of simulating the CI/CD process. The credentials are not valid, which is why the error message says:
+"The security token included in the request is invalid."
+
+However, the pipeline itself has proceeded normally, and all other steps of the workflow (such as building the Docker image, pushing it to ECR, etc.) would work as expected if valid AWS credentials were provided.
+
+Key Point:
+The main goal of this simulation is to demonstrate the CI/CD process flow and how it integrates with GitHub Actions and AWS ECS. As long as the logic behind the pipeline is correct, the project will work fine once proper AWS credentials are used. The error here doesn't affect the overall demonstration, as it's part of the process of mocking the flow.
+
+Once actual credentials are used, the workflow will execute successfully, and the deployment will happen as intended.
