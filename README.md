@@ -210,6 +210,10 @@ With real AWS credentials:
 ✔️ ECS will deploy successfully
 ✔️ The full CI/CD pipeline will work end-to-end
 
+<img width="1865" height="1028" alt="image" src="https://github.com/user-attachments/assets/270209f5-3d76-4775-b32e-17cae20937a1" />
+
+<img width="1849" height="1029" alt="image" src="https://github.com/user-attachments/assets/b431eb6c-4d4d-42eb-b579-b25a2b0a4fc8" />
+
 ---
 
 🚀 Final Words
