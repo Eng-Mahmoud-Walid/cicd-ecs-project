@@ -1,138 +1,181 @@
 # CI/CD Pipeline Project with GitHub Actions and AWS ECS
 
-Welcome to my **CI/CD Pipeline Project**! In this project, I will demonstrate how I implemented a fully automated CI/CD pipeline for a containerized Node.js microservice using **GitHub Actions**, **Docker**, and **AWS ECS** (Elastic Container Service). 
+Welcome to my **CI/CD Pipeline Project**!  
+This project demonstrates a fully automated CI/CD pipeline for a containerized Node.js microservice using **GitHub Actions**, **Docker**, and **AWS ECS** (Elastic Container Service).
 
-This README will guide you through the project structure, how it works, and how to set it up on your local machine or cloud environment.
-
-## 🚀 **Project Overview**
-
-The goal of this project is to automate the process of Continuous Integration and Continuous Deployment (CI/CD) using the tools and technologies I’ve learned along my **DevOps journey**.
-
-**Key Features**:
-- **Continuous Integration (CI)** using **GitHub Actions**.
-- **Docker** for containerization.
-- **AWS ECS** for deploying and scaling the application.
-- **Zero Downtime Deployment** through ECS rolling updates.
+This README explains the project structure, how the CI/CD pipeline works, and how to run the application locally.
 
 ---
 
-## 🔧 **Technologies Used**
-- **GitHub Actions**: Automating the CI/CD pipeline.
-- **Docker**: Containerizing the application for portability and scalability.
-- **AWS ECS**: Deploying and managing the application in the cloud.
-- **Amazon ECR**: Storing and managing Docker images.
+## 🚀 Project Overview
+
+The purpose of this project is to automate the entire process of **Continuous Integration (CI)** and **Continuous Deployment (CD)** using modern DevOps tools and cloud technologies.
+
+### **Key Features**
+- Fully automated CI/CD using GitHub Actions  
+- Docker containerization  
+- Deployment to Amazon ECS  
+- Zero-downtime deployments using ECS rolling updates  
 
 ---
 
-## 📦 **Project Structure**
+## 🔧 Technologies Used
+- **GitHub Actions** – CI/CD automation  
+- **Docker** – Containerization  
+- **Amazon ECR** – Docker image storage  
+- **Amazon ECS** – Deployment and orchestration  
+- **Node.js (Express)** – Microservice application  
 
-Here’s an overview of the project’s structure:
-```md
+---
+
+## 📂 Project Structure
+
+```text
+.
 ├── .github/
-│ └── workflows/
-│ └── deploy.yml # GitHub Actions workflow file
-├── Dockerfile # Docker configuration for building the app image
-├── .dockerignore # Ignored files for Docker build
-├── index.js # Application entry point (Node.js app)
-├── package.json # Project dependencies and scripts
-├── .gitignore # Git ignored files
-└── README.md # Project documentation
+│   └── workflows/
+│       └── deploy.yml          # GitHub Actions workflow
+├── Dockerfile                  # Docker build file
+├── .dockerignore               # Ignore files during Docker build
+├── index.js                    # Node.js entry file
+├── package.json                # Node.js dependencies
+├── .gitignore                  # Git ignore configuration
+└── README.md                   # Documentation
+
 ```
----
+
+🛠️ How to Run the Project Locally
+Follow these steps to run the application on your machine:
+
+1️⃣ Clone the Repository
+```bash
+
+git clone https://github.com/Eng-Mahmoud-Walid/cicd-ecs-project.git
+cd cicd-ecs-project
+
+```
+
+2️⃣ Install Dependencies
+```bash
+
+npm install
+
+```
+
+3️⃣ Build the Docker Image
+```bash
+
+docker build -t cicd-ecs-app .
+
+```
+
+4️⃣ Run the Docker Container
+```bash
+
+docker run -p 8080:8080 cicd-ecs-app
+
+```
+
+Your application will be available at:
+
+👉 ``` http://localhost:8080 ```
 
 🔄 CI/CD Pipeline Overview
-The CI/CD pipeline is fully automated using GitHub Actions. Below is the breakdown of how the pipeline works:
+This project includes a fully automated CI/CD pipeline using GitHub Actions.
 
-Continuous Integration (CI) Steps:
-Push Code to GitHub 💻: Push your changes to the GitHub repository to trigger the pipeline.
+🌟 Continuous Integration (CI)
+Push code to GitHub → triggers CI
 
-Trigger CI Workflow ⚡: The pipeline is automatically triggered when you push code to the main branch.
+Workflow builds Docker image
 
-Build Docker Image 🐳: The pipeline builds the Docker image for the application.
+Runs tests (placeholder)
 
-Run Tests 🔍: Automated tests are run to verify the functionality of the code.
+Pushes the image to Amazon ECR
 
-Push Docker Image to ECR/Docker Hub 🏞️: Once the tests pass, the Docker image is pushed to a container registry (ECR or Docker Hub).
+---
 
-Continuous Deployment (CD) Steps:
-Pull Docker Image for Deployment 🔄: The pipeline pulls the Docker image from the container registry.
+🌍 Continuous Deployment (CD)
+ECS pulls the new image
 
-Deploy to AWS ECS 🖥️: The app is deployed to AWS ECS, where it’s hosted and managed in the cloud.
+ECS updates the service
 
-Zero Downtime Deployment 🔄✅: The deployment uses ECS rolling updates to ensure zero downtime for users.
+Rolling deployment ensures zero downtime
 
-⚙️ How the CI/CD Works with GitHub Actions
-The entire process is automated with GitHub Actions. Here’s the GitHub Actions workflow file (.github/workflows/deploy.yml), which contains the full pipeline configuration:
+⚙️ GitHub Actions Workflow (with full comments)
 
 ```yaml
 
 name: CI/CD Pipeline to AWS ECR/ECS
 
-# Workflow triggers
+# ----------------------------
+# Workflow Triggers
+# ----------------------------
 on:
-  # Run when changes are pushed to the main branch
   push:
     branches:
-      - main
-  # Allows manual runs from the GitHub UI
-  workflow_dispatch:
+      - main      # Trigger on push to main branch
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
 
-# Environment variables used throughout the workflow
+# ----------------------------
+# Global Environment Variables
+# ----------------------------
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
 
 jobs:
+
+  # ============================
+  # JOB 1 — Build & Push Image
+  # ============================
   build-and-push:
     name: Build and Push Docker Image to ECR
     runs-on: ubuntu-latest
 
-    # Define outputs to be used by the next job (deploy)
     outputs:
-      image_uri: ${{ steps.image.outputs.image_uri }}
+      image_uri: ${{ steps.image.outputs.image_uri }}   # Pass image URI to next job
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4   # Pull repository code
 
-      # 1. Configuration of AWS credentials using GitHub Secrets
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}   # AWS IAM Access Key
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 2. Log in to the Amazon ECR registry
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@v2   # Authenticate Docker to ECR
 
-      # 3. Build, Tag, and Push the Docker Image
       - name: Build, Tag, and Push Docker Image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          # Use commit SHA for unique versioning
-          IMAGE_TAG: ${{ github.sha }} 
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}  # Your AWS account registry
+          IMAGE_TAG: ${{ github.sha }}    # Unique tag per commit
         run: |
-          # Build the image using the ECR registry URI and repository name
+          echo "Building Docker image..."
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
 
-          # Push both the specific tag and the latest tag to ECR
+          echo "Pushing Docker image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-      # 4. Define the output image URI
       - name: Define image URI output
         id: image
-        run: echo "image_uri=$(echo ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }})" >> $GITHUB_OUTPUT
+        run: |
+          echo "image_uri=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" >> $GITHUB_OUTPUT
+          # This passes the final image URI to the deployment job
 
+  # ============================
+  # JOB 2 — Deploy to ECS
+  # ============================
   deploy:
     name: Deploy to AWS ECS
     runs-on: ubuntu-latest
-    # This job waits for the build-and-push job to successfully complete
-    needs: build-and-push 
+    needs: build-and-push    # Waits for the build job to finish
 
     steps:
       - name: Configure AWS Credentials
@@ -142,39 +185,34 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Deploy to ECS Service using the aws-actions/amazon-ecs-deploy-task-definition Action
       - name: Deploy to ECS Service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          # Cluster and Service names from GitHub Secrets
-          cluster: ${{ secrets.ECS_CLUSTER }}
-          service: ${{ secrets.ECS_SERVICE }}
+          cluster: ${{ secrets.ECS_CLUSTER }}           # ECS Cluster name
+          service: ${{ secrets.ECS_SERVICE }}           # ECS Service name
+          task-definition: ${{ secrets.ECS_TASK_DEFINITION }}  # Task definition family
+          container-name: cicd-app-container            # Container name inside the task definition
+          image: ${{ needs.build-and-push.outputs.image_uri }} # New Docker image to deploy
 
-          # Task definition family name from GitHub Secrets
-          task-definition: ${{ secrets.ECS_TASK_DEFINITION }}
+```
+<img width="1362" height="764" alt="image" src="https://github.com/user-attachments/assets/69291920-de03-4924-bde6-b206cece097a" />
 
-          # The container name used in your Task Definition
-          container-name: cicd-app-container 
-
-          # The image URI built in the previous job
-          image: ${{ needs.build-and-push.outputs.image_uri }}
-
-```     
-🌍 Deployment on AWS ECS
-Once the CI/CD pipeline is successfully executed, the application is deployed to AWS ECS (Elastic Container Service). AWS ECS handles the orchestration and scaling of the application container.
 ---
-<img width="1845" height="979" alt="image" src="https://github.com/user-attachments/assets/58664e70-47e5-41a6-8a71-58a7b610cbc0" />
+⚠️ About the AWS Credentials Error
+Because the AWS credentials used in this project are fake placeholder credentials, the workflow correctly fails with:
 
-The error you're seeing here is expected, as the AWS credentials used in this workflow are fake/placeholder credentials for the sake of simulating the CI/CD process. The credentials are not valid, which is why the error message says:
 "The security token included in the request is invalid."
 
-However, the pipeline itself has proceeded normally, and all other steps of the workflow (such as building the Docker image, pushing it to ECR, etc.) would work as expected if valid AWS credentials were provided.
+This is expected.
 
-Key Point:
-The main goal of this simulation is to demonstrate the CI/CD process flow and how it integrates with GitHub Actions and AWS ECS. As long as the logic behind the pipeline is correct, the project will work fine once proper AWS credentials are used. The error here doesn't affect the overall demonstration, as it's part of the process of mocking the flow.
+With real AWS credentials:
+✔️ Image will push to ECR
+✔️ ECS will deploy successfully
+✔️ The full CI/CD pipeline will work end-to-end
 
-Once actual credentials are used, the workflow will execute successfully, and the deployment will happen as intended.
 ---
-🚀 Excited to see this CI/CD pipeline in action!
-Feel free to fork, clone, and contribute. Looking forward to what’s next in the world of DevOps! 💻🔧
----
+
+🚀 Final Words
+Excited to see this CI/CD pipeline in action!
+Feel free to fork, clone, explore, and contribute.
+More DevOps projects coming soon! 💻🔧
